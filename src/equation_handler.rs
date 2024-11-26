@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
-use crate::equation_handler::FactorType::Operator;
 use std::collections::HashMap;
+use crate::vputils;
 
 pub const MATH_OPERATORS: &[&str] = &[
     "sqrt", "abs", "sin", "cos", "tan", "acos", "asin", "atan", "log", "log10",
@@ -10,7 +10,6 @@ pub const MATH_OPERATORS: &[&str] = &[
 #[derive(Debug)]
 pub struct EquationHandler {
     variables: HashMap<String, f64>,
-    formula_string: String,
     factors: Vec<Factor>,
 }
 
@@ -18,7 +17,6 @@ impl EquationHandler {
     pub fn new() -> Self {
         EquationHandler {
             variables: HashMap::new(),
-            formula_string: String::new(),
             factors: Vec::new(),
         }
     }
@@ -63,23 +61,26 @@ impl EquationHandler {
 
     pub fn calculate_formula(&mut self, formula_string: &str) -> Option<f64> {
         self.factors.clear();
-        println!("Original: {}", formula_string);
+        let formatted_formula_string = Self::handle_string_formatting(formula_string);
+
 
         // TODO Placeholder
-        None
+        Some(10.0)
     }
 
     /// Handles initial string formatting for parser. Adds zero prefixes to values starting with
     /// negative sign (dash) and converts E-notation values to use ^ operator
     fn handle_string_formatting(s: &str) -> String {
         println!("Formatting string: {}", s);
-        let temp: String;
+        let mut temp: String;
         // Parser can't handle a string starting with negative sign, but it can handle it if there is a zero in front of the negative sign
         if s.starts_with("-") {
             temp = "0".to_string() + &s;
         } else {
             temp = s.to_string();
         }
+        // Remove the whitespace
+        temp.retain(|c| !c.is_whitespace());
 
         let mut result: String = String::with_capacity(temp.len());
         let mut chars = temp.chars().peekable();
@@ -180,12 +181,184 @@ impl EquationHandler {
         result
     }
 
+    fn populate_lists_streaming(&mut self, formula_string: &str) {
+        let mut current_factor_type = FactorType::None;
+        let formula_string = formula_string.to_lowercase();
+        let mut buffer = String::with_capacity(formula_string.len());
+        let mut running_index = 0;
+        let mut brackets = false;
+        let mut chars = formula_string.chars().peekable();
+        let mut peeked_none_found_counter = 0;
+        loop {
+            let peeked_opt = chars.peek();
+            let current;
+            match peeked_opt {
+                // We have iterated through the string, but buffer is not empty
+                // Set the current char to value that isn't valid in any branch
+                // of the match with current_factor_type
+                None => {
+                    current = ' ';
+                    // If peeked was None (= iteration at the end of string) and buffer is empty,
+                    // break the loop. If buffer still has stuff in it, run one more lap to clean it
+                    // up (if possible)
+                    if buffer.is_empty() {
+                        break;
+                    }
+                    peeked_none_found_counter += 1;
+                    // Infinite loop safeguard. None should be only found with peek when
+                    // buffer is not emptied, but string is already fully iterated
+                    if peeked_none_found_counter > 1 {
+                        break;
+                    }
+                }
+                Some(c) => {
+                    current = *c;
+                    // Everything in brackets are considered to be comments (useful if equation needs
+                    // to have units, e.g. 10 [kN] * 5 [m])
+                    if current == '[' {
+                        brackets = true;
+                        continue;
+                    } else if current == ']' {
+                        brackets = false;
+                    }
+                    if brackets { continue; }
+                }
+            }
+
+            match current_factor_type {
+                FactorType::Number => {
+                    if Self::is_number_or_decimal_separator(current) {
+                        // Next is guaranteed to be some in Some(current) = chars.peek();
+                        buffer.push(chars.next().unwrap());
+                        continue; // Make sure that chars.peek is checked before continuing
+                    } else {
+                        let buffer_as_double = vputils::s_to_double(buffer.as_str());
+                        match buffer_as_double {
+                            Some(d) => {
+                                self.factors.push(Factor::new_number(
+                                    running_index,
+                                    buffer.len() as isize,
+                                    d
+                                ));
+                            }
+                            _ => {}
+                        }
+                        current_factor_type = FactorType::None;
+                        running_index += 1;
+                    }
+                }
+                FactorType::Variable => {
+                    // A math operator found. (sqrt, cos, sin, ...)
+                    if current == '(' {
+                        if MATH_OPERATORS.contains(&buffer.as_str()) {
+                            chars.next(); // Skip the opening parenthesis
+                            let mut open_parenthesis_count = 0;
+                            let mut val_buffer = String::new();
+                            while let Some(temp_c) = chars.next() {
+                                if temp_c == ')' && open_parenthesis_count == 0 {
+                                    let val = self.get_value_from_special_math_op(buffer.as_str(), val_buffer.as_str());
+                                    if val.is_none() {
+                                        println!("Value is none!");
+                                        break; }
+                                    self.factors.push(Factor::new_number(
+                                        running_index,
+                                        val_buffer.len() as isize,
+                                        val.unwrap()));
+                                    current_factor_type = FactorType::None;
+                                    running_index += 1;
+                                    // The closing parenthesis is ok to be consumed. We only
+                                    // want the number from the math operation
+                                    break;
+                                } else if temp_c == ')' {
+                                    open_parenthesis_count -= 1;
+                                } else if temp_c == '(' {
+                                    open_parenthesis_count += 1;
+                                }
+                                val_buffer.push(temp_c);
+                            }
+                        }
+                    }
+                    if Self::is_valid_formula_char(current) {
+                        // Next is guaranteed to be some in Some(current) = chars.peek();
+                        buffer.push(chars.next().unwrap());
+                        continue; // Make sure that chars.peek is checked before continuing
+                    } else {
+                        if self.variables.contains_key(buffer.as_str()) {
+                            // A variable has been found. Add new factor and set its double
+                            // value to the value saved under the variable key
+                            self.factors.push(Factor::new_number(
+                                running_index,
+                                buffer.len() as isize,
+                                self.variables[buffer.as_str()]
+                            ));
+                            running_index += 1;
+                        }
+                        current_factor_type = FactorType::None;
+                    }
+                }
+                // If the current factor type is none, try to check which factor type the current
+                // character should be and continue the parsing
+                FactorType::None => {
+                    buffer.clear();
+                    if Self::is_number_or_decimal_separator(current) {
+                        current_factor_type = FactorType::Number;
+                    } else if (current).is_ascii_alphabetic() {
+                        current_factor_type = FactorType::Variable;
+                    } else if Self::is_operator(current) {
+                        let next = chars.next().unwrap();
+                        self.factors.push(Factor::new(running_index, 1, next.to_string(), FactorType::Operator));
+                        current_factor_type = FactorType::None;
+                        running_index += 1;
+                    }
+                }
+                FactorType::Operator => {
+                    // Not used in this method!
+                }
+            }
+        }
+    }
+
+    fn get_value_from_special_math_op(&self, operation: &str, valuestr: &str) -> Option<f64> {
+        // Create an inner equation handler to handle equations inside math operations
+        // e.g. sin(alpha-50)
+        let mut eq : EquationHandler = EquationHandler::new();
+        // Add the variables from current equation handler to temporary inner equation handler
+        for v in self.variables.iter() {
+            eq.add_variable(v.0, *v.1);
+        }
+        let value = eq.calculate_formula(valuestr);
+        if value.is_none() { return None; }
+        match operation {
+            "sqrt" => { Some(value.unwrap().sqrt()) }
+            "abs" => { Some(value.unwrap().abs()) }
+            "sin" => { Some(value.unwrap().sin()) }
+            "cos" => { Some(value.unwrap().cos()) }
+            "tan" => { Some(value.unwrap().tan()) }
+            "acos" => { Some(value.unwrap().acos()) }
+            "asin" => { Some(value.unwrap().asin()) }
+            "atan" => { Some(value.unwrap().atan()) }
+            "log" => { Some(value.unwrap().log(std::f64::consts::E)) }
+            "log10" => { Some(value.unwrap().log10()) }
+            _ => {None}
+        }
+    }
+
     fn is_number_or_decimal_separator(c: char) -> bool {
         c.is_ascii_digit() || c == '.' || c == ','
     }
 
     fn is_valid_formula_char(c: char) -> bool {
         c.is_ascii_alphanumeric() || c == '_' || c == ','
+    }
+
+    fn is_operator(c: char) -> bool {
+        c == '+' ||
+        c == '-' ||
+        c == '/' ||
+        c == '*' ||
+        c == '(' ||
+        c == ')' ||
+        c == '^'
     }
 }
 
@@ -199,15 +372,15 @@ pub enum FactorType {
 
 #[derive(Debug)]
 pub struct Factor {
-    index: i32,
-    length: i32,
+    index: isize,
+    length: isize,
     double_value: f64,
     key: String,
     factor_type: FactorType,
 }
 
 impl Factor {
-    pub fn new(index: i32, length: i32, key: String, factor_type: FactorType) -> Self {
+    pub fn new(index: isize, length: isize, key: String, factor_type: FactorType) -> Self {
         Factor {
             index,
             length,
@@ -217,7 +390,7 @@ impl Factor {
         }
     }
 
-    pub fn new_variable(index: i32, length: i32, key: String, double_value: f64) -> Self {
+    pub fn new_variable(index: isize, length: isize, key: String, double_value: f64) -> Self {
         Factor {
             index,
             length,
@@ -227,7 +400,7 @@ impl Factor {
         }
     }
 
-    pub fn new_number(index: i32, length: i32, double_value: f64) -> Self {
+    pub fn new_number(index: isize, length: isize, double_value: f64) -> Self {
         Factor {
             index,
             length,
@@ -239,7 +412,7 @@ impl Factor {
 
     pub fn get_operand_value(&self) -> i32 {
         match self.factor_type {
-            Operator => {
+            FactorType::Operator => {
                 if self.key == "(" || self.key == ")" {
                     return 0;
                 } else if self.key == "+" || self.key == "-" {
@@ -256,7 +429,7 @@ impl Factor {
 
     pub fn perform_calculation(value: f64, op: Factor, f2: f64) -> f64 {
         match op.factor_type {
-            Operator => match op.key.as_str() {
+            FactorType::Operator => match op.key.as_str() {
                 "+" => value + f2,
                 "-" => value - f2,
                 "*" => value * f2,
@@ -271,7 +444,6 @@ impl Factor {
 
 #[cfg(test)]
 pub mod tests {
-    use super::*;
     use crate::equation_handler::EquationHandler;
 
     #[test]
@@ -283,9 +455,24 @@ pub mod tests {
     }
 
     #[test]
+    fn list_population() {
+        test_list_population("(TESTI*2E-005)+TESTI", 15);
+        test_list_population("sin(50)", 1);
+        test_list_population("sin(50*2+100/4+TESTI)", 1);
+    }
+    
+    fn test_list_population(s: &str, expected: usize) {
+        let mut equation_handler = EquationHandler::new();
+        equation_handler.add_variable("TESTI", 1.0);
+        equation_handler.populate_lists_streaming(EquationHandler::handle_string_formatting(s).as_str());
+        println!("{:?}", equation_handler.factors);
+        assert_eq!(equation_handler.factors.len(), expected);
+    }
+
+    #[test]
     fn string_formatter() {
         assert_eq!(
-            EquationHandler::handle_string_formatting("5+5*15"),
+            EquationHandler::handle_string_formatting("5 +5*15"),
             "5+5*15"
         );
         assert_eq!(
@@ -293,11 +480,11 @@ pub mod tests {
             "5+5*15-50"
         );
         assert_eq!(
-            EquationHandler::handle_string_formatting("5+5*(15+15)"),
+            EquationHandler::handle_string_formatting("5+5* ( 15+15)"),
             "5+5*(15+15)"
         );
         assert_eq!(
-            EquationHandler::handle_string_formatting("(5+5)*15"),
+            EquationHandler::handle_string_formatting("( 5+5)  *1 5"),
             "(5+5)*15"
         );
         assert_eq!(
@@ -305,7 +492,7 @@ pub mod tests {
             "0-5+5*15"
         );
         assert_eq!(
-            EquationHandler::handle_string_formatting("-5+5*15*(-15)*10^-5"),
+            EquationHandler::handle_string_formatting("-5+ 5*15 *(-15 )*1 0^ -5"),
             "0-5+5*15*(0-15)*10^(0-5)"
         );
         assert_eq!(
