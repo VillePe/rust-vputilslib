@@ -714,6 +714,22 @@ pub mod tests {
         );
         assert!(
             (equation_handler
+                .calculate_formula("-5*10^2^2+5*15*(-15)*10^-5^-5")
+                .unwrap()
+                .abs()
+                - 51124.17137)
+                < 0.0001
+        );
+        assert!(
+            (equation_handler
+                .calculate_formula("-5*10^2^2^2+5*15*(-15)*10^-5^-5")
+                .unwrap()
+                .abs()
+                - 50000000000001124.17)
+                < 0.1
+        );
+        assert!(
+            (equation_handler
                 .calculate_formula("-5+5*15*(-15)*10^-5+5")
                 .unwrap()
                 .abs()
