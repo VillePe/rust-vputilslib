@@ -1,24 +1,12 @@
 ﻿#![allow(dead_code)]
 #![allow(non_snake_case)]
 
-use crate::geometry2d::polygon::Polygon;
-
 pub mod polygon;
 pub mod rectangle;
-
-#[derive(Debug)]
-pub struct VpPoint {
-    pub x: f64,
-    pub y: f64,
-}
-
-impl VpPoint {
-    pub fn new(x: f64, y: f64) -> VpPoint {
-        VpPoint { x, y }
-    }
-}
+mod vppoint;
 
 /// Calculates the area of given polygon. Always returns a positive value.
+/// Note, polygon can't self intersect or the calculated area is not correct.
 pub fn calculate_area(polygon: &Polygon) -> f64 {
     let area = calculate_area_internal(polygon);
     area.abs()
@@ -63,13 +51,49 @@ pub fn centroid_from_polygon(polygon: &Polygon) -> VpPoint {
     VpPoint::new(x, y)
 }
 
+// The structs are defined below. Implementations and traits are handled in geometry2d folder
+
+#[derive(Debug, PartialEq)]
+pub struct VpPoint {
+    pub x: f64,
+    pub y: f64,
+}
+
+pub struct Polygon {
+    pub points: Vec<VpPoint>
+}
+
+pub struct Rectangle {
+    pub width: f64,
+    pub height: f64,
+    /// The bottom left point of the rectangle
+    pub origin: VpPoint,
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::geometry2d::polygon::Polygon;
+    use crate::geometry2d::Polygon;
     use crate::geometry2d::{calculate_area, centroid_from_polygon, VpPoint};
+    
+    
 
     #[test]
-    fn centroid() {
+    fn area_self_intersecting() {
+        let mut polygon = Polygon::new_empty();
+        polygon.points.push(VpPoint::new(0.0, 0.0));
+        polygon.points.push(VpPoint::new(25.0, 25.0));
+        polygon.points.push(VpPoint::new(25.0, 0.0));
+        polygon.points.push(VpPoint::new(0.0, 25.0));
+        polygon.points.push(VpPoint::new(0.0, 0.0));
+
+        let area = calculate_area(&polygon);
+        let centroid = centroid_from_polygon(&polygon);
+
+        assert_eq!(area, 0.0);
+    }
+
+    #[test]
+    fn centroid_and_area() {
         let point1 = VpPoint::new(25.0, 0.0);
         let point2 = VpPoint::new(25.0+25.0, 25.0);
         let point3 = VpPoint::new(25.0, 25.0+25.0);
