@@ -51,6 +51,62 @@ pub fn centroid_from_polygon(polygon: &Polygon) -> VpPoint {
     VpPoint::new(x, y)
 }
 
+/// Gets the minimum x value from given list of points
+pub fn get_min_x(points: &Vec<VpPoint>) -> Option<f64> {
+    if points.len() == 0 {
+        return None;
+    }
+    let mut min = points[0].x;
+    for p in points {
+        if p.x < min {
+            min = p.x;
+        }
+    }
+    Some(min)
+}
+
+/// Gets the minimum x value from given list of points
+pub fn get_max_x(points: &Vec<VpPoint>) -> Option<f64> {
+    if points.len() == 0 {
+        return None;
+    }
+    let mut max = points[0].x;
+    for p in points {
+        if p.x > max {
+            max = p.x;
+        }
+    }
+    Some(max)
+}
+
+/// Gets the minimum x value from given list of points
+pub fn get_min_y(points: &Vec<VpPoint>) -> Option<f64> {
+    if points.len() == 0 {
+        return None;
+    }
+    let mut min = points[0].y;
+    for p in points {
+        if p.y < min {
+            min = p.y;
+        }
+    }
+    Some(min)
+}
+
+/// Gets the minimum x value from given list of points
+pub fn get_max_y(points: &Vec<VpPoint>) -> Option<f64> {
+    if points.len() == 0 {
+        return None;
+    }
+    let mut max = points[0].y;
+    for p in points {
+        if p.y > max {
+            max = p.y;
+        }
+    }
+    Some(max)
+}
+
 // The structs are defined below. Implementations and traits are handled in geometry2d folder
 
 #[derive(Debug, PartialEq)]
