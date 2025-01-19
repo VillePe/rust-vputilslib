@@ -3,8 +3,8 @@
 
 use crate::geometry2d::polygon::Polygon;
 
-mod polygon;
-mod rectangle;
+pub mod polygon;
+pub mod rectangle;
 
 #[derive(Debug)]
 pub struct VpPoint {
