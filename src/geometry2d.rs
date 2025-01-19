@@ -107,6 +107,25 @@ pub fn get_max_y(points: &Vec<VpPoint>) -> Option<f64> {
     Some(max)
 }
 
+/// Rotates the given point around the origo. Angle in degrees. Doesn't modify original point.
+pub fn rotate_point(origin: VpPoint, point: VpPoint, angle: f64) -> VpPoint {
+    let (x,y) = rotate(origin.x, origin.y, point.x, point.y, angle);
+    VpPoint::new(x, y)
+}
+
+/// Rotates the point around given origo. Angle in degrees. 
+pub fn rotate(origin_x: f64, origin_y: f64, x: f64, y: f64, angle: f64) -> (f64, f64) {
+    let degrees_in_radians = angle.to_radians();
+    let c = degrees_in_radians.cos();
+    let s = degrees_in_radians.sin();
+    let offset_x = x - origin_x;
+    let offset_y = y - origin_y;
+    let new_x = offset_x * c - offset_y * s;
+    let new_y = offset_x * s + offset_y * c;
+    
+    (origin_x+new_x, origin_y+new_y)
+}
+
 // The structs are defined below. Implementations and traits are handled in geometry2d folder
 
 #[derive(Debug, PartialEq)]
