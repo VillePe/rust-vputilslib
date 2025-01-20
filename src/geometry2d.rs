@@ -3,7 +3,7 @@
 
 pub mod polygon;
 pub mod rectangle;
-mod vppoint;
+pub mod vppoint;
 
 /// Calculates the area of given polygon. Always returns a positive value.
 /// Note, polygon can't self intersect or the calculated area is not correct.
