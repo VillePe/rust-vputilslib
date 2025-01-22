@@ -5,6 +5,22 @@ pub mod polygon;
 pub mod rectangle;
 pub mod vppoint;
 
+pub fn calc_length_between_points(p1: VpPoint, p2: VpPoint) -> f64 {
+    calc_length_between(p1.x, p1.y, p2.x, p2.y)
+}
+
+pub fn calc_length_between(x1: f64, y1: f64, x2: f64, y2: f64) -> f64 {
+    if x1 > 50000.0 || x2 > 50000.0 || y1 > 50000.0 || y2 > 50000.0 ||
+        x1 < -50000.0 || x2 < -50000.0 || y1 < -50000.0 || y2 < -50000.0{
+        // Prevent overflowing by using divider of 10000
+        let d = 10000.0;
+        let temp = (x2/d-x1/d).powi(2) + (y2/d-y1/d).powi(2);
+        return temp.sqrt() * d;
+    }
+    let temp = (x2-x1).powi(2) + (y2-y1).powi(2);
+    temp.sqrt()
+}
+
 /// Calculates the area of given polygon. Always returns a positive value.
 /// Note, polygon can't self intersect or the calculated area is not correct.
 pub fn calculate_area(polygon: &Polygon) -> f64 {
