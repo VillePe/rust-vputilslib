@@ -10,14 +10,8 @@ pub fn calc_length_between_points(p1: VpPoint, p2: VpPoint) -> f64 {
 }
 
 pub fn calc_length_between(x1: f64, y1: f64, x2: f64, y2: f64) -> f64 {
-    if x1 > 50000.0 || x2 > 50000.0 || y1 > 50000.0 || y2 > 50000.0 ||
-        x1 < -50000.0 || x2 < -50000.0 || y1 < -50000.0 || y2 < -50000.0{
-        // Prevent overflowing by using divider of 10000
-        let d = 10000.0;
-        let temp = (x2/d-x1/d).powi(2) + (y2/d-y1/d).powi(2);
-        return temp.sqrt() * d;
-    }
-    let temp = (x2-x1).powi(2) + (y2-y1).powi(2);
+    // println!("({x2}-{x1})^2+({y2}-{y1})^2 = {0}", (x2-x1).powf(2.0) + (y2-y1).powf(2.0));
+    let temp = (x2-x1).powf(2.0) + (y2-y1).powf(2.0);
     temp.sqrt()
 }
 
@@ -163,9 +157,7 @@ pub struct Rectangle {
 
 #[cfg(test)]
 mod tests {
-    use crate::geometry2d::Polygon;
-    use crate::geometry2d::{calculate_area, centroid_from_polygon, VpPoint};
-    
+    use super::*;
     
 
     #[test]
@@ -232,6 +224,30 @@ mod tests {
         assert_eq!(area, 1250.0);
         assert_eq!(centroid.x, 25.0+50.0);
         assert_eq!(centroid.y, 25.0+10.0);
+    }
+
+    #[test]
+    fn calculate_length_between() {
+        let p1 = VpPoint::new(123.0, 123.0);
+        let p2 = VpPoint::new(40075000.0, 321321.0);
+        let res = calc_length_between_points(p1, p2);
+        println!("res = {0}", res);
+        println!("assert = {0}", (res-40076164.1717409501880));
+        assert!((res-40076164.1717409501880).abs() < 0.0001 );
+
+        let p1 = VpPoint::new(123.0, 123.0);
+        let p2 = VpPoint::new(40075000000.0, 321321.0);
+        let res = calc_length_between_points(p1, p2);
+        println!("res = {0}", res);
+        println!("assert = {0}", (res-40074999878.287188465614));
+        assert!((res-40074999878.287188465614).abs() < 0.0001 );
+
+        let p1 = VpPoint::new(123456.0, 123456.0);
+        let p2 = VpPoint::new(40075000000000.0, 321321321.0);
+        let res = calc_length_between_points(p1, p2);
+        println!("res = {0}", res);
+        println!("assert = {0}", (res-40074999877831.18738361476462760514));
+        assert!((res-40074999877831.18738361476462760514).abs() < 0.0001 );
     }
 
 }
