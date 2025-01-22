@@ -5,7 +5,7 @@ pub mod polygon;
 pub mod rectangle;
 pub mod vppoint;
 
-pub fn calc_length_between_points(p1: VpPoint, p2: VpPoint) -> f64 {
+pub fn calc_length_between_points(p1: &VpPoint, p2: &VpPoint) -> f64 {
     calc_length_between(p1.x, p1.y, p2.x, p2.y)
 }
 
@@ -230,21 +230,21 @@ mod tests {
     fn calculate_length_between() {
         let p1 = VpPoint::new(123.0, 123.0);
         let p2 = VpPoint::new(40075000.0, 321321.0);
-        let res = calc_length_between_points(p1, p2);
+        let res = calc_length_between_points(&p1, &p2);
         println!("res = {0}", res);
         println!("assert = {0}", (res-40076164.1717409501880));
         assert!((res-40076164.1717409501880).abs() < 0.0001 );
 
         let p1 = VpPoint::new(123.0, 123.0);
         let p2 = VpPoint::new(40075000000.0, 321321.0);
-        let res = calc_length_between_points(p1, p2);
+        let res = calc_length_between_points(&p1, &p2);
         println!("res = {0}", res);
         println!("assert = {0}", (res-40074999878.287188465614));
         assert!((res-40074999878.287188465614).abs() < 0.0001 );
 
         let p1 = VpPoint::new(123456.0, 123456.0);
         let p2 = VpPoint::new(40075000000000.0, 321321321.0);
-        let res = calc_length_between_points(p1, p2);
+        let res = calc_length_between_points(&p1, &p2);
         println!("res = {0}", res);
         println!("assert = {0}", (res-40074999877831.18738361476462760514));
         assert!((res-40074999877831.18738361476462760514).abs() < 0.0001 );
