@@ -117,6 +117,39 @@ pub fn get_max_y(points: &Vec<VpPoint>) -> Option<f64> {
     Some(max)
 }
 
+pub fn get_angle_from_points(origo: &VpPoint, p1: &VpPoint) -> f64 {
+    get_angle(origo.x, origo.y, p1.x, p1.y)
+}
+
+pub fn get_angle(origo_x: f64, origo_y: f64, point_x: f64, point_y: f64) -> f64 {
+    let x = point_x - origo_x;
+    let y = point_y - origo_y;
+    let mut add = 0.0;
+    if x == 0.0 && y == 0.0 {return 0.0}
+    if x == 0.0 {
+        let res = if  y > 0.0 {90.0} else { 270.0 };
+        return res;
+    }
+    if y == 0.0 {
+        let res = if  x > 0.0 {0.0} else { 180.0 };
+        return res;
+    }
+
+    let mut radians = (y/x).atan();
+    if x < 0.0 && y > 0.0 {
+        radians = (-x/y).atan();
+        add = 90.0;
+    } else if x < 0.0 && y < 0.0 {
+        radians = (y/x).atan();
+        add = 180.0;
+    } else if x > 0.0 && y < 0.0 {
+        radians = (-x/y).atan();
+        add = 270.0;
+    }
+
+    radians.to_degrees() + add
+}
+
 /// Rotates the given point around the origo. Angle in degrees. Doesn't modify original point.
 pub fn rotate_point(origin: VpPoint, point: VpPoint, angle: f64) -> VpPoint {
     let (x,y) = rotate(origin.x, origin.y, point.x, point.y, angle);
@@ -248,6 +281,39 @@ mod tests {
         println!("res = {0}", res);
         println!("assert = {0}", (res-40074999877831.18738361476462760514));
         assert!((res-40074999877831.18738361476462760514).abs() < 0.0001 );
+    }
+
+    #[test]
+    fn get_angle() {
+        let p1 = VpPoint::new(123.0, 123.0);
+        let p2 = VpPoint::new(123.0+123.0, 123.0+123.0);
+        let res = get_angle_from_points(&p1, &p2);
+        println!("res1 = {0}", res);
+        assert!((res-45.0).abs() < 0.01);
+
+        let p1 = VpPoint::new(123.0, 123.0);
+        let p2 = VpPoint::new(321.0, 555.0);
+        let res = get_angle_from_points(&p1, &p2);
+        println!("res2 = {0}", res);
+        assert!((res-65.3764352138363).abs() < 0.01);
+
+        let p1 = VpPoint::new(123.0, 123.0);
+        let p2 = VpPoint::new(-321.0, 555.0);
+        let res = get_angle_from_points(&p1, &p2);
+        println!("res3 = {0}", res);
+        assert!((res-135.785).abs() < 0.01);
+
+        let p1 = VpPoint::new(123.0, 123.0);
+        let p2 = VpPoint::new(-321.0, -555.0);
+        let res = get_angle_from_points(&p1, &p2);
+        println!("res4 = {0}", res);
+        assert!((res-236.781).abs() < 0.01);
+
+        let p1 = VpPoint::new(123.0, 123.0);
+        let p2 = VpPoint::new(321.0, -555.0);
+        let res = get_angle_from_points(&p1, &p2);
+        println!("res5 = {0}", res);
+        assert!((res-286.28).abs() < 0.01);
     }
 
 }
