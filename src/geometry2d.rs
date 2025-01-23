@@ -151,7 +151,7 @@ pub fn get_angle(origo_x: f64, origo_y: f64, point_x: f64, point_y: f64) -> f64 
 }
 
 /// Rotates the given point around the origo. Angle in degrees. Doesn't modify original point.
-pub fn rotate_point(origin: VpPoint, point: VpPoint, angle: f64) -> VpPoint {
+pub fn rotate_point(origin: &VpPoint, point: &VpPoint, angle: f64) -> VpPoint {
     let (x,y) = rotate(origin.x, origin.y, point.x, point.y, angle);
     VpPoint::new(x, y)
 }
