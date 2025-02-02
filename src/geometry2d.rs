@@ -5,10 +5,16 @@ pub mod polygon;
 pub mod rectangle;
 pub mod vppoint;
 
+pub use vppoint::VpPoint;
+pub use rectangle::Rectangle;
+pub use polygon::Polygon;
+
+/// Calculates the length between two points.
 pub fn calc_length_between_points(p1: &VpPoint, p2: &VpPoint) -> f64 {
     calc_length_between(p1.x, p1.y, p2.x, p2.y)
 }
 
+/// Calculates the length between two points.
 pub fn calc_length_between(x1: f64, y1: f64, x2: f64, y2: f64) -> f64 {
     // println!("({x2}-{x1})^2+({y2}-{y1})^2 = {0}", (x2-x1).powf(2.0) + (y2-y1).powf(2.0));
     let temp = (x2-x1).powf(2.0) + (y2-y1).powf(2.0);
@@ -117,10 +123,12 @@ pub fn get_max_y(points: &Vec<VpPoint>) -> Option<f64> {
     Some(max)
 }
 
+/// Gets the angle from origo to point. The angle is measured counter clockwise starting from global X-axis
 pub fn get_angle_from_points(origo: &VpPoint, p1: &VpPoint) -> f64 {
     get_angle(origo.x, origo.y, p1.x, p1.y)
 }
 
+/// Gets the angle from origo to point. The angle is measured counter clockwise starting from global X-axis
 pub fn get_angle(origo_x: f64, origo_y: f64, point_x: f64, point_y: f64) -> f64 {
     let x = point_x - origo_x;
     let y = point_y - origo_y;
@@ -176,25 +184,6 @@ pub fn rotate(origin_x: f64, origin_y: f64, x: f64, y: f64, angle: f64) -> (f64,
     let new_y = offset_x * s + offset_y * c;
     
     (origin_x+new_x, origin_y+new_y)
-}
-
-// The structs are defined below. Implementations and traits are handled in geometry2d folder
-
-#[derive(Debug, PartialEq)]
-pub struct VpPoint {
-    pub x: f64,
-    pub y: f64,
-}
-
-pub struct Polygon {
-    pub points: Vec<VpPoint>
-}
-
-pub struct Rectangle {
-    pub width: f64,
-    pub height: f64,
-    /// The bottom left point of the rectangle
-    pub origin: VpPoint,
 }
 
 #[cfg(test)]

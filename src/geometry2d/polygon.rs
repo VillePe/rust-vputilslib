@@ -1,4 +1,8 @@
-﻿use crate::geometry2d::*;
+﻿use crate::geometry2d::VpPoint;
+
+pub struct Polygon {
+    pub points: Vec<VpPoint>
+}
 
 impl Polygon {
     pub fn new(points: Vec<VpPoint>) -> Polygon {

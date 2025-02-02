@@ -1,4 +1,11 @@
-﻿use crate::geometry2d::*;
+﻿use crate::geometry2d::{get_max_x, get_max_y, get_min_x, get_min_y, Polygon, VpPoint};
+
+pub struct Rectangle {
+    pub width: f64,
+    pub height: f64,
+    /// The bottom left point of the rectangle
+    pub origin: VpPoint,
+}
 
 impl Rectangle {
     pub fn new(x: f64, y: f64, width: f64, height: f64) -> Self {
