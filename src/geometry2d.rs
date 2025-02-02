@@ -150,6 +150,15 @@ pub fn get_angle(origo_x: f64, origo_y: f64, point_x: f64, point_y: f64) -> f64 
     radians.to_degrees() + add
 }
 
+/// Normalizes the given angle to be in the range of 0..360
+pub fn normalize_angle(angle: f64) -> f64 {
+    let mut normalized_angle = angle % 360.0;
+    if angle < 0.0 {
+        normalized_angle += 360.0;
+    }
+    normalized_angle
+}
+
 /// Rotates the given point around the origo. Angle in degrees. Doesn't modify original point.
 pub fn rotate_point(origin: &VpPoint, point: &VpPoint, angle: f64) -> VpPoint {
     let (x,y) = rotate(origin.x, origin.y, point.x, point.y, angle);
@@ -314,6 +323,16 @@ mod tests {
         let res = get_angle_from_points(&p1, &p2);
         println!("res5 = {0}", res);
         assert!((res-286.28).abs() < 0.01);
+    }
+
+    #[test]
+    fn t_normalize_angle() {
+        assert_eq!(normalize_angle(50.0), 50.0);
+        assert_eq!(normalize_angle(255.0), 255.0);
+        assert_eq!(normalize_angle(-90.0), 270.0);
+        assert_eq!(normalize_angle(720.0), 0.0);
+        assert_eq!(normalize_angle(715.0), 355.0);
+        assert_eq!(normalize_angle(-715.0), 5.0);
     }
 
 }
