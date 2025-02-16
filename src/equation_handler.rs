@@ -70,7 +70,7 @@ impl EquationHandler {
     }
 
     /// Calculates the given formula string. Returns None if the formula is invalid.
-    pub fn calculate_formula(&mut self, formula_string: &str) -> Option<f64> {
+    pub fn calculate_formula(&self, formula_string: &str) -> Option<f64> {
         let formatted_formula_string = Self::handle_string_formatting(formula_string);
         let factors = self.populate_lists_streaming(formatted_formula_string.as_str());
         let input: Vec<Factor> = Self::get_prefix_notation(factors);
