@@ -8,6 +8,9 @@ pub const MATH_OPERATORS: &[&str] = &[
     "sqrt", "abs", "sin", "cos", "tan", "acos", "asin", "atan", "log", "log10",
 ];
 
+/// EquationHandler is a struct that handles equations. It can calculate the result of a given
+/// formula string. The formula string can contain variables that are set by the user. 
+/// The keys are all converted to lowercase (so all keys are case invariable).
 #[derive(Debug)]
 pub struct EquationHandler {
     variables: HashMap<String, f64>,
@@ -20,6 +23,8 @@ impl EquationHandler {
         }
     }
 
+    /// Adds a variable to the variables hashmap. The key is converted to lowercase.
+    /// Duplicate keys are not added. False is returned if the key already exists.
     pub fn add_variable(&mut self, name: &str, value: f64) -> bool {
         let key = String::from(name).to_lowercase();
         if !self.variables.contains_key(&key) {
@@ -29,14 +34,17 @@ impl EquationHandler {
         false
     }
 
+    /// Checks if the variable exists
     pub fn variable_is_set(&self, variable: &str) -> bool {
         self.variables.contains_key(variable)
     }
 
+    /// Clears all the variables
     pub fn clear_variables(&mut self) {
         self.variables.clear()
     }
 
+    /// Sets multiple variables to the variables hashmap. The keys are converted to lowercase.
     pub fn set_variables(&mut self, variables: HashMap<String, f64>) {
         self.variables.clear();
         for (k, v) in variables {
@@ -45,24 +53,33 @@ impl EquationHandler {
         }
     }
 
+    /// Returns the value of the variable if it exists in the variables hashmap
     pub fn get_variable(&self, variable: &str) -> Option<f64> {
         self.variables.get(variable).cloned()
     }
 
+    /// Sets a variable
     pub fn set_variable(&mut self, variable: &str, value: f64) {
         let key = String::from(variable).to_lowercase();
         self.variables.insert(key, value);
     }
 
+    /// Removes a variable
     pub fn remove_variable(&mut self, variable: &str) {
         self.variables.remove(variable);
     }
 
+    /// Calculates the given formula string. Returns None if the formula is invalid.
     pub fn calculate_formula(&mut self, formula_string: &str) -> Option<f64> {
         let formatted_formula_string = Self::handle_string_formatting(formula_string);
         let factors = self.populate_lists_streaming(formatted_formula_string.as_str());
         let input: Vec<Factor> = Self::get_prefix_notation(factors);
         self.calculate_prefix_notation(input)
+    }
+
+    /// Returns a clone of the variables hashmap
+    pub fn get_variables(&self) -> HashMap<String, f64> {
+        self.variables.clone()
     }
 
     /// Handles initial string formatting for parser. Adds zero prefixes to values starting with
