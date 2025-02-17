@@ -23,6 +23,14 @@ impl EquationHandler {
         }
     }
 
+    fn from<const N: usize>(arr: [(&str, f64); N]) -> Self {
+        let mut eq = EquationHandler::new();
+        for (k, v) in arr {
+            eq.add_variable(k, v);
+        }
+        eq
+    }
+
     /// Adds a variable to the variables hashmap. The key is converted to lowercase.
     /// Duplicate keys are not added. False is returned if the key already exists.
     pub fn add_variable(&mut self, name: &str, value: f64) -> bool {
@@ -417,7 +425,7 @@ impl EquationHandler {
             {
                 output_stack.push(current.double_value);
             } else if current.factor_type == FactorType::Operator {
-                if (output_stack.len() < 2) {
+                if output_stack.len() < 2 {
                     println!("ERROR with prefix notation calculations!");
                     return None;
                 }
@@ -472,6 +480,16 @@ impl EquationHandler {
 
     fn is_operator(c: char) -> bool {
         c == '+' || c == '-' || c == '/' || c == '*' || c == '(' || c == ')' || c == '^'
+    }
+}
+
+impl Clone for EquationHandler {
+    fn clone(&self) -> Self {
+        let mut new_eq = EquationHandler::new();
+        for (k, v) in self.variables.iter() {
+            new_eq.add_variable(k, *v);
+        }
+        new_eq
     }
 }
 
@@ -909,5 +927,23 @@ pub mod tests {
                 - 0.00000349199)
                 < 0.00001
         );
+    }
+
+    #[test]
+    fn clone() {
+        let original = EquationHandler::from([("x", 1.0), ("y", 2.0)]);
+        assert_eq!(original.get_variable("x"), Some(1.0));
+        assert_eq!(original.get_variable("y"), Some(2.0));
+        let mut clone = original.clone();
+        clone.set_variable("x", 5.0);
+        assert_eq!(original.get_variable("x"), Some(1.0));
+        assert_eq!(original.get_variable("y"), Some(2.0));
+        assert_eq!(clone.get_variable("x"), Some(5.0));
+        assert_eq!(clone.get_variable("y"), Some(2.0));
+        clone.set_variable("y", 10.0);
+        assert_eq!(original.get_variable("x"), Some(1.0));
+        assert_eq!(original.get_variable("y"), Some(2.0));
+        assert_eq!(clone.get_variable("x"), Some(5.0));
+        assert_eq!(clone.get_variable("y"), Some(10.0));
     }
 }
