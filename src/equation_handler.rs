@@ -74,7 +74,14 @@ impl EquationHandler {
         let formatted_formula_string = Self::handle_string_formatting(formula_string);
         let factors = self.populate_lists_streaming(formatted_formula_string.as_str());
         let input: Vec<Factor> = Self::get_prefix_notation(factors);
-        self.calculate_prefix_notation(input)
+        let result = self.calculate_prefix_notation(input);
+        match result {
+            Some(r) => Some(r),
+            None => {
+                println!("Error with calculation! Formula: {}", formula_string);
+                None
+            },
+        }
     }
 
     /// Returns a clone of the variables hashmap
