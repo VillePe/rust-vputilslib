@@ -410,6 +410,10 @@ impl EquationHandler {
             {
                 output_stack.push(current.double_value);
             } else if current.factor_type == FactorType::Operator {
+                if (output_stack.len() < 2) {
+                    println!("ERROR with prefix notation calculations!");
+                    return None;
+                }
                 let pop1 = output_stack.pop().unwrap();
                 let pop2 = output_stack.pop().unwrap();
                 let temp_calc = Factor::perform_calculation(pop2, current, pop1);
