@@ -1,5 +1,8 @@
-﻿use crate::geometry2d::{get_max_x, get_max_y, get_min_x, get_min_y, Polygon, VpPoint};
+﻿use serde::{Deserialize, Serialize};
 
+use crate::geometry2d::{get_max_x, get_max_y, get_min_x, get_min_y, Polygon, VpPoint};
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Rectangle {
     pub width: f64,
     pub height: f64,

@@ -1,4 +1,6 @@
-﻿#[derive(Debug, PartialEq)]
+﻿use serde::{Deserialize, Serialize};
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct VpPoint {
     pub x: f64,
     pub y: f64,

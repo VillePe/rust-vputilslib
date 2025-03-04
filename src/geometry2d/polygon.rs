@@ -1,5 +1,8 @@
-﻿use crate::geometry2d::VpPoint;
+﻿use serde::{Deserialize, Serialize};
 
+use crate::geometry2d::VpPoint;
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Polygon {
     pub points: Vec<VpPoint>
 }

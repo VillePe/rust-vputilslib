@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use serde::{Deserialize, Serialize};
+
 use crate::vputils;
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
@@ -11,7 +13,7 @@ pub const MATH_OPERATORS: &[&str] = &[
 /// EquationHandler is a struct that handles equations. It can calculate the result of a given
 /// formula string. The formula string can contain variables that are set by the user. 
 /// The keys are all converted to lowercase (so all keys are case invariable).
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct EquationHandler {
     variables: HashMap<String, f64>,
 }
@@ -945,5 +947,17 @@ pub mod tests {
         assert_eq!(original.get_variable("y"), Some(2.0));
         assert_eq!(clone.get_variable("x"), Some(5.0));
         assert_eq!(clone.get_variable("y"), Some(10.0));
+    }
+
+    #[test]
+    fn serde() {
+        let original = EquationHandler::from([("x", 1.0), ("y", 2.0)]);
+        let serialized = serde_json::to_string(&original).unwrap();
+        println!("{}", serialized);
+        let deserialized: EquationHandler = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(original.get_variable("x"), Some(1.0));
+        assert_eq!(original.get_variable("y"), Some(2.0));
+        assert_eq!(deserialized.get_variable("x"), Some(1.0));
+        assert_eq!(deserialized.get_variable("y"), Some(2.0));
     }
 }
