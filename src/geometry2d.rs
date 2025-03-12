@@ -201,7 +201,7 @@ mod tests {
         polygon.points.push(VpPoint::new(0.0, 0.0));
 
         let area = calculate_area(&polygon);
-        let centroid = centroid_from_polygon(&polygon);
+        // let centroid = centroid_from_polygon(&polygon);
 
         assert_eq!(area, 0.0);
     }
