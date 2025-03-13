@@ -5,6 +5,7 @@ pub mod polygon;
 pub mod rectangle;
 pub mod vppoint;
 
+use polygon::Direction;
 pub use vppoint::VpPoint;
 pub use rectangle::Rectangle;
 pub use polygon::Polygon;
@@ -19,6 +20,18 @@ pub fn calc_length_between(x1: f64, y1: f64, x2: f64, y2: f64) -> f64 {
     // println!("({x2}-{x1})^2+({y2}-{y1})^2 = {0}", (x2-x1).powf(2.0) + (y2-y1).powf(2.0));
     let temp = (x2-x1).powf(2.0) + (y2-y1).powf(2.0);
     temp.sqrt()
+}
+
+/// Gets whether the polygon is clockwise or counterclockwise. Note! Uses the area function
+/// and tests if the area is positive or not (at least as of now, might change to something better 
+/// at some point). If the area needs to be calculated or has been already calculated, use the 
+/// calculate_area function or its value.
+/// 
+/// If the polygon is self intersecting and the areas negate each other, the direction is set to 
+/// CounterClockwise
+pub fn get_polygon_direction(polygon: &Polygon) -> Direction {
+    let area = calculate_area_internal(polygon);
+    if area < 0.0 { Direction::Clockwise } else { Direction::CounterClockwise }
 }
 
 /// Calculates the area of given polygon. Always returns a positive value.
@@ -202,12 +215,16 @@ mod tests {
 
         let area = calculate_area(&polygon);
         // let centroid = centroid_from_polygon(&polygon);
+        let direction = get_polygon_direction(&polygon);
+        println!("Direction: {:?}", direction);
 
         assert_eq!(area, 0.0);
+        assert_eq!(direction, Direction::CounterClockwise);
     }
 
     #[test]
     fn centroid_and_area() {
+        // A diamond shape with origo at (0, 0)
         let point1 = VpPoint::new(25.0, 0.0);
         let point2 = VpPoint::new(25.0+25.0, 25.0);
         let point3 = VpPoint::new(25.0, 25.0+25.0);
@@ -217,15 +234,18 @@ mod tests {
 
         let area = calculate_area(&polygon);
         let centroid = centroid_from_polygon(&polygon);
+        let direction = get_polygon_direction(&polygon);
 
         assert_eq!(area, 1250.0);
         assert_eq!(centroid.x, 25.0);
         assert_eq!(centroid.y, 25.0);
+        assert_eq!(direction, Direction::CounterClockwise);
     }
 
     #[test]
     fn centroid_clockwise() {
         let mut polygon = Polygon::new_empty();
+        // A diamond shape with origo at (0, 0)
         polygon.points.push(VpPoint::new(25.0, 0.0));
         polygon.points.push(VpPoint::new(0.0, 25.0));
         polygon.points.push(VpPoint::new(25.0, 25.0+25.0));
@@ -234,27 +254,32 @@ mod tests {
         
         let area = calculate_area(&polygon);
         let centroid = centroid_from_polygon(&polygon);
+        let direction = get_polygon_direction(&polygon);
         
         assert_eq!(area, 1250.0);
         assert_eq!(centroid.x, 25.0);
         assert_eq!(centroid.y, 25.0);
+        assert_eq!(direction, Direction::Clockwise);
     }
 
     #[test]
     fn centroid_clockwise_offsetted_from_origo() {
         let mut polygon = Polygon::new_empty();
-        polygon.points.push(VpPoint::new(25.0+50.0, 0.0+10.0));
-        polygon.points.push(VpPoint::new(0.0+50.0, 25.0+10.0));
-        polygon.points.push(VpPoint::new(25.0+50.0, 25.0+25.0+10.0));
-        polygon.points.push(VpPoint::new(25.0+25.0+50.0, 25.0+10.0));
-        polygon.points.push(VpPoint::new(25.0+50.0, 0.0+10.0));
+        // A diamond shape with origo at (50, 10)
+        polygon.points.push(VpPoint::new(25.0+50.0, 0.0+10.0)); // 75, 10
+        polygon.points.push(VpPoint::new(0.0+50.0, 25.0+10.0)); // 50, 35
+        polygon.points.push(VpPoint::new(25.0+50.0, 25.0+25.0+10.0)); // 75, 60
+        polygon.points.push(VpPoint::new(25.0+25.0+50.0, 25.0+10.0)); // 100, 35
+        polygon.points.push(VpPoint::new(25.0+50.0, 0.0+10.0)); // 75, 10
 
         let area = calculate_area(&polygon);
         let centroid = centroid_from_polygon(&polygon);
+        let direction = get_polygon_direction(&polygon);
 
         assert_eq!(area, 1250.0);
         assert_eq!(centroid.x, 25.0+50.0);
         assert_eq!(centroid.y, 25.0+10.0);
+        assert_eq!(direction, Direction::Clockwise);
     }
 
     #[test]

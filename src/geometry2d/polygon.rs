@@ -1,6 +1,6 @@
 ﻿use serde::{Deserialize, Serialize};
 
-use crate::geometry2d::VpPoint;
+use crate::{geometry2d::{self, VpPoint}, vputils};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Polygon {
@@ -40,6 +40,16 @@ impl Polygon {
         }
         (p1, p2)
     }
+
+    pub fn get_direction(&self) -> Direction {
+        geometry2d::get_polygon_direction(self)
+    }
+}
+
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub enum Direction {
+    Clockwise = -1,
+    CounterClockwise = 1,
 }
 
 #[cfg(test)]
