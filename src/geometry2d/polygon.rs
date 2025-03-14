@@ -1,6 +1,6 @@
 ﻿use serde::{Deserialize, Serialize};
 
-use crate::{geometry2d::{self, VpPoint}, vputils};
+use crate::geometry2d::{self, VpPoint};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Polygon {
