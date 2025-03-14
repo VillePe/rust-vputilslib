@@ -25,7 +25,7 @@ impl EquationHandler {
         }
     }
 
-    fn from<const N: usize>(arr: [(&str, f64); N]) -> Self {
+    pub fn from<const N: usize>(arr: [(&str, f64); N]) -> Self {
         let mut eq = EquationHandler::new();
         for (k, v) in arr {
             eq.add_variable(k, v);
@@ -927,6 +927,15 @@ pub mod tests {
                 .unwrap()
                 .abs()
                 - 0.00000349199)
+                < 0.00001
+        );
+        equation_handler.add_variable("Ø", 16.0);
+        assert!(
+            (equation_handler
+                .calculate_formula("Ø*60")
+                .unwrap()
+                .abs()
+                - 960.0)
                 < 0.00001
         );
     }
