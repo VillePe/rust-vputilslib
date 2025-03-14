@@ -317,7 +317,7 @@ impl EquationHandler {
                             }
                         }
                     }
-                    if Self::is_valid_formula_char(current) {
+                    if !Self::is_operator(current) && current != ' ' {
                         // Next is guaranteed to be some in Some(current) = chars.peek();
                         buffer.push(chars.next().unwrap());
                         continue; // Make sure that chars.peek is checked before continuing
@@ -341,8 +341,6 @@ impl EquationHandler {
                     buffer.clear();
                     if Self::is_number_or_decimal_separator(current) {
                         current_factor_type = FactorType::Number;
-                    } else if (current).is_ascii_alphabetic() {
-                        current_factor_type = FactorType::Variable;
                     } else if Self::is_operator(current) {
                         let next = chars.next().unwrap();
                         result.push(Factor::new(
@@ -353,6 +351,8 @@ impl EquationHandler {
                         ));
                         current_factor_type = FactorType::None;
                         running_index += 1;
+                    } else {
+                        current_factor_type = FactorType::Variable;
                     }
                 }
                 FactorType::Operator => {
@@ -756,188 +756,165 @@ pub mod tests {
             (equation_handler
                 .calculate_formula("-5+5*15*(-15)*10^-5^-5")
                 .unwrap()
-                .abs()
-                - 1129.1713746)
+                - (-1129.1713746)).abs()
                 < 0.0001
         );
         assert!(
             (equation_handler
                 .calculate_formula("-5*10^2^2+5*15*(-15)*10^-5^-5")
                 .unwrap()
-                .abs()
-                - 51124.17137)
+                - (-51124.17137)).abs()
                 < 0.0001
         );
         assert!(
             (equation_handler
                 .calculate_formula("-5*10^2^2^2+5*15*(-15)*10^-5^-5")
                 .unwrap()
-                .abs()
-                - 50000000000001124.17)
+                - (-50000000000001124.17)).abs()
                 < 0.1
         );
         assert!(
             (equation_handler
                 .calculate_formula("-5+5*15*(-15)*10^-5+5")
                 .unwrap()
-                .abs()
-                - 0.01125)
+                - (-0.01125)).abs()
                 < 0.01
         );
         assert!(
             (equation_handler
                 .calculate_formula("5+5*(-15)")
                 .unwrap()
-                .abs()
-                - 70.0)
+                - (-70.0)).abs()
                 < 0.1
         );
         assert!(
             (equation_handler
                 .calculate_formula("5+5*(-15+5)")
                 .unwrap()
-                .abs()
-                - 45.0)
+                - (-45.0)).abs()
                 < 0.1
         );
         assert!(
             (equation_handler
                 .calculate_formula("5+5^2*(-15)")
                 .unwrap()
-                .abs()
-                - 370.0)
+                - (-370.0)).abs()
                 < 0.1
         );
         assert!(
             (equation_handler
                 .calculate_formula("5+5*10^3*(-15)")
                 .unwrap()
-                .abs()
-                - 74995.0)
+                - (-74995.0)).abs()
                 < 0.1
         );
         assert!(
             (equation_handler
                 .calculate_formula("5+5*(-15)^2")
                 .unwrap()
-                .abs()
-                - 1130.0)
+                - 1130.0).abs()
                 < 0.1
         );
         assert!(
             (equation_handler
                 .calculate_formula("5/5*(-15)")
                 .unwrap()
-                .abs()
-                - 15.0)
+                - (-15.0)).abs()
                 < 0.1
         );
         assert!(
             (equation_handler
                 .calculate_formula("5+(5*(-15))")
                 .unwrap()
-                .abs()
-                - 70.0)
+                - (-70.0)).abs()
                 < 0.1
         );
-        assert!((equation_handler.calculate_formula("TESTI*2").unwrap().abs() - 20.0) < 0.1);
+        assert!((equation_handler.calculate_formula("TESTI*2").unwrap() - 20.0).abs() < 0.1);
         assert!(
             (equation_handler
                 .calculate_formula("TESTI*2E5")
                 .unwrap()
-                .abs()
-                - 2000000.0)
+                - 2000000.0).abs()
                 < 0.1
         );
         assert!(
             (equation_handler
                 .calculate_formula("TESTI*2E5+TESTI")
                 .unwrap()
-                .abs()
-                - 2000010.0)
+                - 2000010.0).abs()
                 < 0.1
         );
         assert!(
             (equation_handler
                 .calculate_formula("(TESTI*2E5)+TESTI")
                 .unwrap()
-                .abs()
-                - 2000010.0)
+                - 2000010.0).abs()
                 < 0.1
         );
         assert!(
             (equation_handler
                 .calculate_formula("(TESTI*2E+5)+TESTI")
                 .unwrap()
-                .abs()
-                - 2000010.0)
+                - 2000010.0).abs()
                 < 0.1
         );
         assert!(
             (equation_handler
                 .calculate_formula("(TESTI*2E-5)+TESTI")
                 .unwrap()
-                .abs()
-                - 10.0002)
+                - 10.0002).abs()
                 < 0.0001
         );
         assert!(
             (equation_handler
                 .calculate_formula("(TESTI*2E-005)+TESTI")
                 .unwrap()
-                .abs()
-                - 10.0002)
+                - 10.0002).abs()
                 < 0.0001
         );
         assert!(
             (equation_handler
                 .calculate_formula("TESTI*(2E5+TESTI)")
                 .unwrap()
-                .abs()
-                - 2000100.0)
+                - 2000100.0).abs()
                 < 0.1
         );
         assert!(
             (equation_handler
                 .calculate_formula("TESTI*(2E+5+TESTI)")
                 .unwrap()
-                .abs()
-                - 2000100.0)
+                - 2000100.0).abs()
                 < 0.1
         );
         assert!(
             (equation_handler
                 .calculate_formula("TESTI*(2E-5+TESTI)")
                 .unwrap()
-                .abs()
-                - 100.0002)
+                - 100.0002).abs()
                 < 0.00001
         );
         assert!(
             (equation_handler
                 .calculate_formula("TESTI*(2E-005+TESTI)")
                 .unwrap()
-                .abs()
-                - 100.0002)
+                - 100.0002).abs()
                 < 0.00001
         );
         assert!(
             (equation_handler
                 .calculate_formula("3,49199E-06")
                 .unwrap()
-                .abs()
-                - 0.00000349199)
+                - 0.00000349199).abs()
                 < 0.00001
-        );
+        );        
+    }
+
+    #[test] 
+    fn test_unicode_variables() {
+        let mut equation_handler = EquationHandler::new();
         equation_handler.add_variable("Ø", 16.0);
         assert!(
-            (equation_handler
-                .calculate_formula("Ø*60")
-                .unwrap()
-                .abs()
-                - 960.0)
-                < 0.00001
-        );
+            (equation_handler.calculate_formula("Ø*60").unwrap() - 960.0).abs() < 0.00001 );
     }
 
     #[test]
