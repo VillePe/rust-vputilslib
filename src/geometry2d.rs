@@ -199,6 +199,32 @@ pub fn rotate(origin_x: f64, origin_y: f64, x: f64, y: f64, angle: f64) -> (f64,
     (origin_x+new_x, origin_y+new_y)
 }
 
+/// Calculates if p3 lies in the line defined by p1 and p2.
+/// 
+/// ## Arguments
+/// 
+/// * `p1` - First point of the line
+/// * `p2` - Second point of the line
+/// * `p3` - The point to check whether it lies on the line 
+/// * `epsilon` - Tolerance in y direction check after rotating the point
+/// 
+/// ## Returns
+/// 
+/// Returns true if p3 lies in the line defined by p1 and p2
+pub fn point_in_line(l_p1: &VpPoint, l_p2: &VpPoint, point: &VpPoint, epsilon: f64) -> bool {
+    let angle = get_angle_from_points(l_p1, l_p2);
+    let length = calc_length_between_points(l_p1, l_p2);
+    let rotated_point = rotate_point(l_p1, point, -angle);
+    // println!("Angle: {angle:?}");
+    // println!("Length: {length:?}");
+    // println!("P1: {p1:?}");
+    // println!("R_point: {rotated_point:?}");
+    // println!("T1: {0}", rotated_point.x >= p1.x);
+    // println!("T2: {0}", rotated_point.x <= p1.x + length);
+    // println!("T3: {0}", (p1.y - rotated_point.y).abs() <= epsilon);
+    rotated_point.x >= l_p1.x && rotated_point.x <= l_p1.x + length && (l_p1.y - rotated_point.y).abs() <= epsilon
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -347,6 +373,54 @@ mod tests {
         assert_eq!(normalize_angle(720.0), 0.0);
         assert_eq!(normalize_angle(715.0), 355.0);
         assert_eq!(normalize_angle(-715.0), 5.0);
+    }
+
+    #[test]
+    fn t_point_in_line() {
+        let p1 = VpPoint::new(123.0, 0.0);
+        let p2 = VpPoint::new(123.0+123.0+123.0, 0.0);
+        let p3 = VpPoint::new(123.0+123.0, 0.0);
+        assert!(point_in_line(&p1, &p2, &p3, 0.1));
+
+        let p1 = VpPoint::new(123.0, 0.0);
+        let p2 = VpPoint::new(123.0+123.0+123.0, 0.0);
+        let p3 = VpPoint::new(123.0+123.0+123.0+123.0, 0.0);
+        assert!(point_in_line(&p1, &p2, &p3, 0.1) == false);
+
+        let p1 = VpPoint::new(0.0, 123.0);
+        let p2 = VpPoint::new(0.0, 123.0+123.0+123.0);
+        let p3 = VpPoint::new(0.0, 123.0+123.0);
+        assert!(point_in_line(&p1, &p2, &p3, 0.1));
+
+        let p1 = VpPoint::new(123.0, 0.0);
+        let p2 = VpPoint::new(123.0+123.0+123.0, 0.0);
+        let p3 = VpPoint::new(-123.0, 0.0);
+        assert!(point_in_line(&p1, &p2, &p3, 0.1) == false);
+
+        let p1 = VpPoint::new(123.0, 123.0);
+        let p2 = VpPoint::new(123.0+123.0+123.0, 123.0+123.0+123.0);
+        let p3 = VpPoint::new(123.0+123.0, 123.0+123.0);
+        assert!(point_in_line(&p1, &p2, &p3, 0.1));
+
+        let p1 = VpPoint::new(123.0, 123.0);
+        let p2 = VpPoint::new(123.0+123.0+123.0, 123.0+123.0+123.0);
+        let p3 = VpPoint::new(123.0+123.0+1.0, 123.0+123.0);
+        assert!(point_in_line(&p1, &p2, &p3, 0.1) == false);
+
+        let p1 = VpPoint::new(123.0, 123.0);
+        let p2 = VpPoint::new(123.0+123.0+123.0, 123.0+123.0+123.0);
+        let p3 = VpPoint::new(123.0+123.0, 123.0+123.0+1.0);
+        assert!(point_in_line(&p1, &p2, &p3, 0.1) == false);
+
+        let p1 = VpPoint::new(-123.0, -123.0);
+        let p2 = VpPoint::new(-123.0-123.0-123.0, -123.0-123.0-123.0);
+        let p3 = VpPoint::new(-123.0-123.0, -123.0-123.0);
+        assert!(point_in_line(&p1, &p2, &p3, 0.1));
+
+        let p1 = VpPoint::new(-123.0, -123.0);
+        let p2 = VpPoint::new(-123.0-123.0-123.0+1.0, -123.0-123.0-123.0);
+        let p3 = VpPoint::new(-123.0-123.0, -123.0-123.0);
+        assert!(point_in_line(&p1, &p2, &p3, 0.1) == false);
     }
 
 }

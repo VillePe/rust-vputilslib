@@ -148,7 +148,7 @@ pub fn s_to_int_validation(s: &str) -> (Option<isize>, bool) {
     match num_value.parse::<isize>() {
         Ok(result) => (Some(result), valid_value),
         Err(err) => {
-            println!("Error! {err}");
+            println!("Warn! {err}");
             println!("Tried to parse: \"{num_value}\"");
             (None, false) }
     }
