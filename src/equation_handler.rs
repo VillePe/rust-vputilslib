@@ -160,7 +160,9 @@ impl EquationHandler {
             {
                 // E notation found e.g. 1E+004, 1e04 1e-4
                 // Replace E with next line
-                result.push_str("*10^(0");
+                // result.push_str("*10^(0");
+                result.push_str("$(0");
+
                 let mut closing_bracket_set = false;
 
                 // If the char after E is negative or plus sign the jump needs to be 2.
@@ -481,7 +483,7 @@ impl EquationHandler {
     }
 
     fn is_operator(c: char) -> bool {
-        c == '+' || c == '-' || c == '/' || c == '*' || c == '(' || c == ')' || c == '^'
+        c == '+' || c == '-' || c == '/' || c == '*' || c == '(' || c == ')' || c == '^' || c == '$'
     }
 }
 
@@ -567,6 +569,7 @@ impl Factor {
                 "*" => value * f2,
                 "/" => value / f2,
                 "^" => value.powf(f2),
+                "$" => value*10f64.powf(f2),
                 _ => 0.0,
             },
             _ => 0.0,
@@ -608,7 +611,7 @@ pub mod tests {
 
     #[test]
     fn list_population() {
-        test_list_population("(TESTI*2E-005)+TESTI", 15);
+        test_list_population("(TESTI*2E-005)+TESTI", 13);
         test_list_population("sin(50)", 1);
         test_list_population("sin(50*2+100/4+TESTI)", 1);
     }
@@ -689,47 +692,47 @@ pub mod tests {
         );
         assert_eq!(
             EquationHandler::handle_string_formatting("TESTI*2E5"),
-            "TESTI*2*10^(05)"
+            "TESTI*2$(05)"
         );
         assert_eq!(
             EquationHandler::handle_string_formatting("TESTI*2E5+TESTI"),
-            "TESTI*2*10^(05)+TESTI"
+            "TESTI*2$(05)+TESTI"
         );
         assert_eq!(
             EquationHandler::handle_string_formatting("(TESTI*2E5)+TESTI"),
-            "(TESTI*2*10^(05))+TESTI"
+            "(TESTI*2$(05))+TESTI"
         );
         assert_eq!(
             EquationHandler::handle_string_formatting("(TESTI*2E+5)+TESTI"),
-            "(TESTI*2*10^(0+5))+TESTI"
+            "(TESTI*2$(0+5))+TESTI"
         );
         assert_eq!(
             EquationHandler::handle_string_formatting("(TESTI*2E-5)+TESTI"),
-            "(TESTI*2*10^(0-5))+TESTI"
+            "(TESTI*2$(0-5))+TESTI"
         );
         assert_eq!(
             EquationHandler::handle_string_formatting("(TESTI*2E-005)+TESTI"),
-            "(TESTI*2*10^(0-005))+TESTI"
+            "(TESTI*2$(0-005))+TESTI"
         );
         assert_eq!(
             EquationHandler::handle_string_formatting("TESTI*(2E5+TESTI)"),
-            "TESTI*(2*10^(05)+TESTI)"
+            "TESTI*(2$(05)+TESTI)"
         );
         assert_eq!(
             EquationHandler::handle_string_formatting("TESTI*(2E+5+TESTI)"),
-            "TESTI*(2*10^(0+5)+TESTI)"
+            "TESTI*(2$(0+5)+TESTI)"
         );
         assert_eq!(
             EquationHandler::handle_string_formatting("TESTI*(2E-5+TESTI)"),
-            "TESTI*(2*10^(0-5)+TESTI)"
+            "TESTI*(2$(0-5)+TESTI)"
         );
         assert_eq!(
             EquationHandler::handle_string_formatting("TESTI*(2E-005+TESTI)"),
-            "TESTI*(2*10^(0-005)+TESTI)"
+            "TESTI*(2$(0-005)+TESTI)"
         );
         assert_eq!(
             EquationHandler::handle_string_formatting("3,49199E-06"),
-            "3,49199*10^(0-06)"
+            "3,49199$(0-06)"
         );
     }
 
